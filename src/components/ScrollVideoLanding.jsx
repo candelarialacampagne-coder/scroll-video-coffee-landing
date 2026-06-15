@@ -16,6 +16,7 @@ const COFFEES = [
     appearsAt: 0.15,
     leavesAt: 0.40,
     side: 'left',
+    image: '/espresso_oscuro_t.png',
   },
   {
     id: 2,
@@ -28,6 +29,7 @@ const COFFEES = [
     appearsAt: 0.32,
     leavesAt: 0.57,
     side: 'right',
+    image: '/latte_dorado_t.png',
   },
   {
     id: 3,
@@ -40,6 +42,7 @@ const COFFEES = [
     appearsAt: 0.50,
     leavesAt: 0.75,
     side: 'left',
+    image: '/cold_brew_reserve_t.png',
   },
   {
     id: 4,
@@ -52,6 +55,7 @@ const COFFEES = [
     appearsAt: 0.67,
     leavesAt: 0.92,
     side: 'right',
+    image: '/cappuccino_natural_t.png',
   },
 ]
 
@@ -245,79 +249,111 @@ function CoffeeCard({ coffee, scrollYProgress }) {
     [appearsAt - 0.05, appearsAt, leavesAt - 0.05, leavesAt],
     [60, 0, 0, -40]
   )
+  // Rotación de la taza sincronizada con el scroll dentro del rango de la card
+  const rotate = useTransform(
+    scrollYProgress,
+    [appearsAt, leavesAt],
+    [-15, 15]
+  )
+
   return (
     <motion.div
       style={{
         position: 'absolute',
-        bottom: '10%',
+        bottom: '8%',
         left: isLeft ? '4%' : 'auto',
         right: isLeft ? 'auto' : '4%',
         width: 'clamp(270px, 26vw, 330px)',
         opacity, y,
-        background: 'rgba(8, 5, 2, 0.65)',
-        border: '1px solid rgba(249,115,22,0.2)',
-        borderRadius: 24,
-        padding: '26px 28px',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
+        overflow: 'visible',
       }}
     >
-      {/* Tag */}
-      <span style={{
-        display: 'inline-block', fontSize: 9, fontWeight: 700,
-        letterSpacing: '0.18em', textTransform: 'uppercase',
-        color: coffee.tagColor,
-        border: `1px solid ${coffee.tagColor}55`,
-        background: `${coffee.tagColor}15`,
-        borderRadius: 999, padding: '4px 12px', marginBottom: 18,
+      {/* Taza flotante — sobresale arriba de la card */}
+      <motion.img
+        src={coffee.image}
+        alt={coffee.name}
+        animate={{ y: [0, -10, 0] }}
+        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute',
+          top: -180,
+          left: '50%',
+          x: '-50%',
+          width: 340,
+          height: 340,
+          objectFit: 'contain',
+          zIndex: 10,
+          rotate,
+          filter: 'drop-shadow(0px 24px 32px rgba(0,0,0,0.75))',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Card body */}
+      <div style={{
+        background: 'rgba(8, 5, 2, 0.72)',
+        border: '1px solid rgba(249,115,22,0.2)',
+        borderRadius: 24,
+        padding: '100px 28px 26px',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
       }}>
-        {coffee.tag}
-      </span>
-
-      <h3 style={{
-        fontSize: 24, fontWeight: 700, color: '#fff',
-        margin: '0 0 5px', letterSpacing: '-0.03em', lineHeight: 1.1,
-      }}>
-        {coffee.name}
-      </h3>
-
-      <p style={{
-        fontSize: 11, color: '#F97316', margin: '0 0 16px',
-        letterSpacing: '0.08em', textTransform: 'uppercase',
-      }}>
-        {coffee.origin}
-      </p>
-
-      <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(249,115,22,0.25), transparent)', marginBottom: 16 }} />
-
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: '0 0 22px' }}>
-        {coffee.notes}
-      </p>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em' }}>
-          {coffee.price}
+        <span style={{
+          display: 'inline-block', fontSize: 9, fontWeight: 700,
+          letterSpacing: '0.18em', textTransform: 'uppercase',
+          color: coffee.tagColor,
+          border: `1px solid ${coffee.tagColor}55`,
+          background: `${coffee.tagColor}15`,
+          borderRadius: 999, padding: '4px 12px', marginBottom: 14,
+        }}>
+          {coffee.tag}
         </span>
-        <button
-          style={{
-            background: 'linear-gradient(135deg, #92400e, #F97316)',
-            color: '#fff', border: 'none', borderRadius: 999,
-            padding: '9px 22px', fontSize: 12, fontWeight: 700,
-            letterSpacing: '0.04em', cursor: 'pointer',
-            transition: 'transform 0.15s, box-shadow 0.15s',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'scale(1.06)'
-            e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.45)'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'scale(1)'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
-        >
-          Pedir
-        </button>
+
+        <h3 style={{
+          fontSize: 22, fontWeight: 700, color: '#fff',
+          margin: '0 0 4px', letterSpacing: '-0.03em', lineHeight: 1.1,
+        }}>
+          {coffee.name}
+        </h3>
+
+        <p style={{
+          fontSize: 11, color: '#F97316', margin: '0 0 14px',
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+        }}>
+          {coffee.origin}
+        </p>
+
+        <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(249,115,22,0.25), transparent)', marginBottom: 14 }} />
+
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: '0 0 20px' }}>
+          {coffee.notes}
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em' }}>
+            {coffee.price}
+          </span>
+          <button
+            style={{
+              background: 'linear-gradient(135deg, #92400e, #F97316)',
+              color: '#fff', border: 'none', borderRadius: 999,
+              padding: '9px 22px', fontSize: 12, fontWeight: 700,
+              letterSpacing: '0.04em', cursor: 'pointer',
+              transition: 'transform 0.15s, box-shadow 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'scale(1.06)'
+              e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.45)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'scale(1)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            Pedir
+          </button>
+        </div>
       </div>
     </motion.div>
   )
