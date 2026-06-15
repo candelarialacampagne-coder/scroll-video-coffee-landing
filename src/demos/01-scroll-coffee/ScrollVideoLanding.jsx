@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useScroll, useMotionValueEvent, useTransform, motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 const TOTAL_FRAMES = 259
 const FRAMES_PATH = '/frames/frame_'
@@ -77,6 +78,7 @@ function preloadFrames(onProgress) {
 }
 
 export default function ScrollVideoLanding() {
+  const navigate = useNavigate()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const framesRef = useRef([])
@@ -148,6 +150,31 @@ export default function ScrollVideoLanding() {
             background: 'linear-gradient(90deg, #92400e, #F97316, #fbbf24)',
             scaleX: scrollYProgress,
           }} />
+
+          {/* Back button */}
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              position: 'absolute', top: 28, left: 28,
+              background: 'rgba(0,0,0,0.45)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 999, padding: '7px 16px',
+              color: 'rgba(255,255,255,0.6)', fontSize: 12,
+              cursor: 'pointer', backdropFilter: 'blur(10px)',
+              transition: 'color 0.2s, border-color 0.2s',
+              zIndex: 50,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#fff'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+            }}
+          >
+            ← Demo Lab
+          </button>
 
           {/* Scroll hint */}
           <ScrollHint scrollYProgress={scrollYProgress} />
