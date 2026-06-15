@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useScroll, useMotionValueEvent, useTransform, motion, useSpring } from 'framer-motion'
+import { useScroll, useMotionValueEvent, useTransform, motion } from 'framer-motion'
 
-const VIDEO_SRC = '/Coffee_background.mp4'
+const TOTAL_FRAMES = 259
+const FRAMES_PATH = '/frames/frame_'
 
-// Each card appears at a specific scroll progress range
 const COFFEES = [
   {
     id: 1,
@@ -11,11 +11,11 @@ const COFFEES = [
     origin: 'Etiopía · Yirgacheffe',
     notes: 'Chocolate negro · Frutos rojos · Ahumado',
     price: '$4.200',
-    appearsAt: 0.12,   // scroll progress when card enters
-    leavesAt: 0.42,
-    side: 'left',
     tag: 'BESTSELLER',
     tagColor: '#F97316',
+    appearsAt: 0.15,
+    leavesAt: 0.40,
+    side: 'left',
   },
   {
     id: 2,
@@ -23,11 +23,11 @@ const COFFEES = [
     origin: 'Colombia · Huila',
     notes: 'Caramelo · Nuez · Cítrico suave',
     price: '$5.100',
-    appearsAt: 0.28,
-    leavesAt: 0.58,
-    side: 'right',
     tag: 'SUAVE',
     tagColor: '#0EA5E9',
+    appearsAt: 0.32,
+    leavesAt: 0.57,
+    side: 'right',
   },
   {
     id: 3,
@@ -35,11 +35,11 @@ const COFFEES = [
     origin: 'Guatemala · Antigua',
     notes: 'Tabaco dulce · Vainilla · Miel',
     price: '$5.800',
-    appearsAt: 0.44,
-    leavesAt: 0.74,
-    side: 'left',
     tag: 'EDICIÓN LIMITADA',
     tagColor: '#A855F7',
+    appearsAt: 0.50,
+    leavesAt: 0.75,
+    side: 'left',
   },
   {
     id: 4,
@@ -47,269 +47,269 @@ const COFFEES = [
     origin: 'Brasil · Cerrado',
     notes: 'Almendra · Cacao · Cremoso',
     price: '$4.800',
-    appearsAt: 0.60,
-    leavesAt: 0.90,
-    side: 'right',
     tag: 'NUEVO',
     tagColor: '#22C55E',
+    appearsAt: 0.67,
+    leavesAt: 0.92,
+    side: 'right',
   },
 ]
 
+function preloadFrames(onProgress) {
+  const images = []
+  let loaded = 0
+  return new Promise((resolve) => {
+    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+      const img = new Image()
+      img.src = `${FRAMES_PATH}${String(i).padStart(4, '0')}.jpg`
+      img.onload = img.onerror = () => {
+        loaded++
+        onProgress(Math.round((loaded / TOTAL_FRAMES) * 100))
+        if (loaded === TOTAL_FRAMES) resolve(images)
+      }
+      images[i - 1] = img
+    }
+  })
+}
+
 export default function ScrollVideoLanding() {
   const containerRef = useRef(null)
-  const videoRef = useRef(null)
-  const scrollTimerRef = useRef(null)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const canvasRef = useRef(null)
+  const framesRef = useRef([])
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [ready, setReady] = useState(false)
 
   const { scrollYProgress } = useScroll({ target: containerRef })
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 60, damping: 20 })
 
-  // Scroll → video scrub (pure currentTime, no play/pause conflict)
-  useMotionValueEvent(scrollYProgress, 'change', (progress) => {
-    const video = videoRef.current
-    if (!video || !video.duration) return
-
-    video.currentTime = progress * video.duration
-    setIsPlaying(true)
-
-    clearTimeout(scrollTimerRef.current)
-    scrollTimerRef.current = setTimeout(() => {
-      setIsPlaying(false)
-    }, 150)
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    if (!ready) return
+    const canvas = canvasRef.current
+    const frames = framesRef.current
+    if (!canvas || !frames.length) return
+    const index = Math.min(Math.floor(p * TOTAL_FRAMES), TOTAL_FRAMES - 1)
+    const img = frames[index]
+    if (!img?.complete) return
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
   })
 
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+    preloadFrames(setLoadProgress).then((images) => {
+      framesRef.current = images
+      const canvas = canvasRef.current
+      if (canvas && images[0]) {
+        canvas.getContext('2d').drawImage(images[0], 0, 0, canvas.width, canvas.height)
+      }
+      setReady(true)
+    })
+  }, [])
 
-    // Ensure video is loaded but never auto-plays
-    video.load()
-    video.pause()
-
-    return () => clearTimeout(scrollTimerRef.current)
+  useEffect(() => {
+    const resize = () => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
   }, [])
 
   return (
-    <div style={{ background: '#080808', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ background: '#000', fontFamily: "'DM Sans', sans-serif" }}>
+      <div ref={containerRef} style={{ height: '600vh' }}>
+        <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
 
-      {/* ── Sticky scroll section ── */}
-      <div ref={containerRef} style={{ height: '600vh', position: 'relative' }}>
-        <div style={{
-          position: 'sticky', top: 0, height: '100vh',
-          overflow: 'hidden', display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-        }}>
+          {/* Canvas — frame sequence */}
+          <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
 
-          {/* Video background */}
-          <video
-            ref={videoRef}
-            src={VIDEO_SRC}
-            muted playsInline preload="auto"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-
-          {/* Overlays */}
+          {/* Gradient overlays */}
           <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.65) 100%)',
-            pointerEvents: 'none',
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.6) 100%)',
           }} />
 
-          {/* Hero title — fades out as scroll starts */}
-          <HeroTitle scrollYProgress={smoothProgress} />
+          {/* Hero title */}
+          <HeroTitle scrollYProgress={scrollYProgress} />
 
           {/* Coffee cards */}
-          {COFFEES.map((coffee) => (
-            <CoffeeCard
-              key={coffee.id}
-              coffee={coffee}
-              scrollYProgress={smoothProgress}
-            />
+          {COFFEES.map((c) => (
+            <CoffeeCard key={c.id} coffee={c} scrollYProgress={scrollYProgress} />
           ))}
 
           {/* Progress bar */}
           <motion.div style={{
-            position: 'absolute', bottom: 0, left: 0,
-            height: 2, width: '100%',
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: 2, originX: 0,
             background: 'linear-gradient(90deg, #92400e, #F97316, #fbbf24)',
             scaleX: scrollYProgress,
-            transformOrigin: 'left',
           }} />
 
-          {/* Status badge */}
-          <div style={{
-            position: 'absolute', top: 28, right: 28,
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'rgba(0,0,0,0.45)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 999, padding: '6px 14px',
-            backdropFilter: 'blur(10px)',
-          }}>
-            <motion.div
-              animate={{ opacity: isPlaying ? [1, 0.3, 1] : 0.3 }}
-              transition={{ repeat: Infinity, duration: 1 }}
-              style={{ width: 6, height: 6, borderRadius: '50%', background: '#F97316' }}
-            />
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em' }}>
-              {isPlaying ? 'REPRODUCIENDO' : 'PAUSADO'}
-            </span>
-          </div>
-
           {/* Scroll hint */}
-          <ScrollHint scrollYProgress={smoothProgress} />
+          <ScrollHint scrollYProgress={scrollYProgress} />
+
+          {/* Loading screen */}
+          {!ready && (
+            <div style={{
+              position: 'absolute', inset: 0, background: '#000',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 24,
+              zIndex: 100,
+            }}>
+              <p style={{ fontSize: 12, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+                CARGANDO EXPERIENCIA
+              </p>
+              <div style={{ width: 180, height: 1, background: 'rgba(255,255,255,0.08)', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, height: '100%',
+                  width: `${loadProgress}%`,
+                  background: 'linear-gradient(90deg, #92400e, #F97316)',
+                  transition: 'width 0.15s linear',
+                }} />
+              </div>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', margin: 0, letterSpacing: '0.1em' }}>
+                {loadProgress}%
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Final CTA ── */}
+      {/* Final section */}
       <FinalCTA />
     </div>
   )
 }
 
-// ── Hero title ────────────────────────────────────────────────────────────────
+// ─── Hero Title ──────────────────────────────────────────────────────────────
 function HeroTitle({ scrollYProgress }) {
-  const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0])
-  const y = useTransform(scrollYProgress, [0, 0.1], [0, -40])
+  const opacity = useTransform(scrollYProgress, [0, 0.12], [1, 0])
+  const y = useTransform(scrollYProgress, [0, 0.12], [0, -50])
 
   return (
     <div style={{
-      position: 'absolute', top: '50%', left: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: '100%', pointerEvents: 'none',
+      position: 'absolute', inset: 0,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      pointerEvents: 'none',
     }}>
-    <motion.div style={{
-      textAlign: 'center', opacity, y,
-    }}>
-      <p style={{
-        fontSize: 12, letterSpacing: '0.35em', textTransform: 'uppercase',
-        color: '#F97316', margin: '0 0 16px',
-      }}>
-        Specialty Coffee
-      </p>
-      <h1 style={{
-        fontSize: 'clamp(48px, 7vw, 96px)',
-        fontWeight: 700, color: '#fff',
-        lineHeight: 1, letterSpacing: '-0.04em',
-        margin: '0 0 20px',
-      }}>
-        Cada sorbo,<br />una historia.
-      </h1>
-      <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-        Scrolleá para descubrir nuestra carta
-      </p>
-    </motion.div>
+      <motion.div style={{ textAlign: 'center', opacity, y }}>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          style={{
+            fontSize: 11, letterSpacing: '0.4em', textTransform: 'uppercase',
+            color: '#F97316', margin: '0 0 20px',
+          }}
+        >
+          Specialty Coffee
+        </motion.p>
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            fontSize: 'clamp(52px, 7.5vw, 100px)',
+            fontWeight: 700, color: '#fff',
+            lineHeight: 1, letterSpacing: '-0.04em',
+            margin: '0 0 24px',
+          }}
+        >
+          Cada sorbo,<br />una historia.
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9, duration: 0.8 }}
+          style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', margin: 0 }}
+        >
+          Scrolleá para descubrir nuestra carta
+        </motion.p>
+      </motion.div>
     </div>
   )
 }
 
-// ── Coffee Card ───────────────────────────────────────────────────────────────
+// ─── Coffee Card ─────────────────────────────────────────────────────────────
 function CoffeeCard({ coffee, scrollYProgress }) {
   const { appearsAt, leavesAt, side } = coffee
-
-  const midpoint = (appearsAt + leavesAt) / 2
   const isLeft = side === 'left'
 
-  // Enter from bottom, stay visible in the middle, exit upward
-  const y = useTransform(
-    scrollYProgress,
-    [appearsAt - 0.04, appearsAt, midpoint, leavesAt - 0.04, leavesAt],
-    [80, 0, 0, 0, -60]
-  )
   const opacity = useTransform(
     scrollYProgress,
-    [appearsAt - 0.04, appearsAt, leavesAt - 0.04, leavesAt],
+    [appearsAt - 0.05, appearsAt, leavesAt - 0.05, leavesAt],
     [0, 1, 1, 0]
   )
-  const scale = useTransform(
+  const y = useTransform(
     scrollYProgress,
-    [appearsAt - 0.04, appearsAt, leavesAt - 0.04, leavesAt],
-    [0.92, 1, 1, 0.95]
+    [appearsAt - 0.05, appearsAt, leavesAt - 0.05, leavesAt],
+    [60, 0, 0, -40]
   )
-
   return (
     <motion.div
       style={{
         position: 'absolute',
-        bottom: '12%',
-        left: isLeft ? '5%' : 'auto',
-        right: isLeft ? 'auto' : '5%',
-        width: 'clamp(260px, 28vw, 340px)',
-        y, opacity, scale,
-        background: 'rgba(10, 6, 4, 0.72)',
-        border: '1px solid rgba(249,115,22,0.25)',
-        borderRadius: 20,
-        padding: '24px 28px',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        cursor: 'default',
+        bottom: '10%',
+        left: isLeft ? '4%' : 'auto',
+        right: isLeft ? 'auto' : '4%',
+        width: 'clamp(270px, 26vw, 330px)',
+        opacity, y,
+        background: 'rgba(8, 5, 2, 0.65)',
+        border: '1px solid rgba(249,115,22,0.2)',
+        borderRadius: 24,
+        padding: '26px 28px',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
       }}
     >
       {/* Tag */}
       <span style={{
-        display: 'inline-block',
-        fontSize: 10, fontWeight: 700,
-        letterSpacing: '0.15em', textTransform: 'uppercase',
+        display: 'inline-block', fontSize: 9, fontWeight: 700,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
         color: coffee.tagColor,
-        border: `1px solid ${coffee.tagColor}44`,
-        borderRadius: 999,
-        padding: '3px 10px',
-        marginBottom: 16,
-        background: `${coffee.tagColor}18`,
+        border: `1px solid ${coffee.tagColor}55`,
+        background: `${coffee.tagColor}15`,
+        borderRadius: 999, padding: '4px 12px', marginBottom: 18,
       }}>
         {coffee.tag}
       </span>
 
-      {/* Name */}
       <h3 style={{
-        fontSize: 22, fontWeight: 700, color: '#fff',
-        margin: '0 0 4px', letterSpacing: '-0.02em',
-        lineHeight: 1.2,
+        fontSize: 24, fontWeight: 700, color: '#fff',
+        margin: '0 0 5px', letterSpacing: '-0.03em', lineHeight: 1.1,
       }}>
         {coffee.name}
       </h3>
 
-      {/* Origin */}
       <p style={{
-        fontSize: 12, color: '#F97316', margin: '0 0 14px',
-        letterSpacing: '0.05em', textTransform: 'uppercase',
+        fontSize: 11, color: '#F97316', margin: '0 0 16px',
+        letterSpacing: '0.08em', textTransform: 'uppercase',
       }}>
         {coffee.origin}
       </p>
 
-      {/* Divider */}
-      <div style={{
-        height: 1,
-        background: 'linear-gradient(90deg, rgba(249,115,22,0.3), transparent)',
-        marginBottom: 14,
-      }} />
+      <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(249,115,22,0.25), transparent)', marginBottom: 16 }} />
 
-      {/* Tasting notes */}
-      <p style={{
-        fontSize: 13, color: 'rgba(255,255,255,0.5)',
-        lineHeight: 1.6, margin: '0 0 20px',
-      }}>
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: '0 0 22px' }}>
         {coffee.notes}
       </p>
 
-      {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{
-          fontSize: 22, fontWeight: 700, color: '#fff',
-          letterSpacing: '-0.02em',
-        }}>
+        <span style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em' }}>
           {coffee.price}
         </span>
-        <button style={{
-          background: 'linear-gradient(135deg, #92400e, #F97316)',
-          color: '#fff', border: 'none',
-          borderRadius: 999, padding: '8px 20px',
-          fontSize: 12, fontWeight: 700,
-          letterSpacing: '0.05em', cursor: 'pointer',
-          transition: 'transform 0.15s, box-shadow 0.15s',
-        }}
+        <button
+          style={{
+            background: 'linear-gradient(135deg, #92400e, #F97316)',
+            color: '#fff', border: 'none', borderRadius: 999,
+            padding: '9px 22px', fontSize: 12, fontWeight: 700,
+            letterSpacing: '0.04em', cursor: 'pointer',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
           onMouseEnter={e => {
             e.currentTarget.style.transform = 'scale(1.06)'
-            e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)'
+            e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.45)'
           }}
           onMouseLeave={e => {
             e.currentTarget.style.transform = 'scale(1)'
@@ -323,30 +323,28 @@ function CoffeeCard({ coffee, scrollYProgress }) {
   )
 }
 
-// ── Scroll hint ───────────────────────────────────────────────────────────────
+// ─── Scroll Hint ─────────────────────────────────────────────────────────────
 function ScrollHint({ scrollYProgress }) {
-  const opacity = useTransform(scrollYProgress, [0, 0.06], [1, 0])
+  const opacity = useTransform(scrollYProgress, [0, 0.07], [1, 0])
   return (
     <motion.div style={{
-      position: 'absolute', bottom: 36,
-      left: '50%', transform: 'translateX(-50%)',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', gap: 8, opacity,
-      pointerEvents: 'none',
+      position: 'absolute', bottom: 32, left: '50%', x: '-50%',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+      opacity, pointerEvents: 'none',
     }}>
-      <span style={{ fontSize: 10, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+        style={{ width: 1, height: 36, background: 'linear-gradient(to bottom, #F97316, transparent)' }}
+      />
+      <span style={{ fontSize: 10, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase' }}>
         Scroll
       </span>
-      <motion.div
-        animate={{ y: [0, 7, 0] }}
-        transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-        style={{ width: 1, height: 32, background: 'linear-gradient(to bottom, #F97316, transparent)' }}
-      />
     </motion.div>
   )
 }
 
-// ── Final CTA ─────────────────────────────────────────────────────────────────
+// ─── Final CTA ───────────────────────────────────────────────────────────────
 function FinalCTA() {
   return (
     <section style={{
@@ -354,43 +352,39 @@ function FinalCTA() {
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       padding: '100px 24px', textAlign: 'center',
-      background: 'radial-gradient(ellipse at 50% 0%, rgba(146,64,14,0.2) 0%, #080808 60%)',
+      background: 'radial-gradient(ellipse at 50% 0%, rgba(146,64,14,0.18) 0%, #000 55%)',
     }}>
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, margin: '-100px' }}
       >
-        <p style={{
-          fontSize: 11, letterSpacing: '0.35em', textTransform: 'uppercase',
-          color: '#F97316', marginBottom: 20,
-        }}>
+        <p style={{ fontSize: 11, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#F97316', marginBottom: 20 }}>
           Specialty Coffee Store
         </p>
         <h2 style={{
-          fontSize: 'clamp(38px, 5.5vw, 72px)',
+          fontSize: 'clamp(40px, 6vw, 76px)',
           fontWeight: 700, color: '#fff',
           lineHeight: 1.05, letterSpacing: '-0.04em',
-          margin: '0 0 20px', maxWidth: 620,
+          margin: '0 0 20px', maxWidth: 640,
         }}>
           El café de autor que buscabas.
         </h2>
         <p style={{
-          fontSize: 17, color: 'rgba(255,255,255,0.4)',
-          lineHeight: 1.7, maxWidth: 420,
-          margin: '0 auto 48px',
+          fontSize: 17, color: 'rgba(255,255,255,0.38)',
+          lineHeight: 1.75, maxWidth: 420, margin: '0 auto 52px',
         }}>
           Granos de origen único, tostado artesanal y recetas que cuentan historias.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button style={{
-            background: 'linear-gradient(135deg, #92400e, #F97316)',
-            color: '#fff', border: 'none',
-            borderRadius: 999, padding: '16px 40px',
-            fontSize: 15, fontWeight: 700,
-            cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
+          <button
+            style={{
+              background: 'linear-gradient(135deg, #92400e, #F97316)',
+              color: '#fff', border: 'none', borderRadius: 999,
+              padding: '16px 42px', fontSize: 15, fontWeight: 700,
+              cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
             onMouseEnter={e => {
               e.currentTarget.style.transform = 'scale(1.04)'
               e.currentTarget.style.boxShadow = '0 0 40px rgba(249,115,22,0.35)'
@@ -402,21 +396,21 @@ function FinalCTA() {
           >
             Ver la carta completa
           </button>
-          <button style={{
-            background: 'transparent',
-            color: 'rgba(255,255,255,0.6)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 999, padding: '16px 36px',
-            fontSize: 15, fontWeight: 500,
-            cursor: 'pointer', transition: 'border-color 0.2s, color 0.2s',
-          }}
+          <button
+            style={{
+              background: 'transparent', color: 'rgba(255,255,255,0.5)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 999, padding: '16px 38px',
+              fontSize: 15, fontWeight: 500,
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'rgba(249,115,22,0.5)'
+              e.currentTarget.style.borderColor = 'rgba(249,115,22,0.45)'
               e.currentTarget.style.color = '#fff'
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
-              e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
+              e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
             }}
           >
             Nuestra historia
