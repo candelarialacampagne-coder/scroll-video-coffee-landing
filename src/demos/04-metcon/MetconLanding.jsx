@@ -409,45 +409,11 @@ function ScrollHint({ scrollYProgress }) {
 }
 
 // ── Nike Swoosh ───────────────────────────────────────────────────────────────
-function NikeSwoosh({ size = 28 }) {
+function NikeSwoosh({ size = 52 }) {
   return (
-    <>
-      <style>{`
-        @keyframes swoosh3d {
-          0%   { transform: perspective(300px) rotateY(0deg); }
-          100% { transform: perspective(300px) rotateY(360deg); }
-        }
-        @keyframes shimmer {
-          0%   { stop-color: #aaa; }
-          25%  { stop-color: #fff; }
-          50%  { stop-color: #ccc; }
-          75%  { stop-color: #fff; }
-          100% { stop-color: #aaa; }
-        }
-        .nike-swoosh-wrap {
-          animation: swoosh3d 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-          display: inline-block;
-        }
-        .shimmer-mid { animation: shimmer 3s ease-in-out infinite; }
-      `}</style>
-      <div className="nike-swoosh-wrap">
-        <svg height={size} viewBox="0 0 400 155" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#888" />
-              <stop offset="35%"  stopColor="#ddd" />
-              <stop offset="50%"  stopColor="#fff" className="shimmer-mid" />
-              <stop offset="65%"  stopColor="#ccc" />
-              <stop offset="100%" stopColor="#777" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M399.5 7.5c0 0-241.6 85-303.4 113.2c-17.9 8.2-34.4 11.1-47.8 9.2C28.3 126 10.7 106.7 16 84.3c3.9-16.7 19.1-29.6 39.8-31.7L0 147.5c0 0 17.5 7.1 47.3 5.5c32.7-1.7 65.5-13.9 96.9-28.7L399.5 7.5z"
-            fill="url(#metalGrad)"
-          />
-        </svg>
-      </div>
-    </>
+    <svg height={size} viewBox="0 0 400 155" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M399.5 7.5c0 0-241.6 85-303.4 113.2c-17.9 8.2-34.4 11.1-47.8 9.2C28.3 126 10.7 106.7 16 84.3c3.9-16.7 19.1-29.6 39.8-31.7L0 147.5c0 0 17.5 7.1 47.3 5.5c32.7-1.7 65.5-13.9 96.9-28.7L399.5 7.5z"/>
+    </svg>
   )
 }
 
