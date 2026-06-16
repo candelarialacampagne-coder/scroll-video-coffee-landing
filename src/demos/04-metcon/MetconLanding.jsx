@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useScroll, useMotionValueEvent, useTransform, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
-const TOTAL_FRAMES = 76
+const TOTAL_FRAMES = 121
 const FRAMES_PATH = '/frames-metcon/frame_'
 
 const SECTIONS = [
@@ -311,9 +311,11 @@ function ScrollHint({ scrollYProgress }) {
 // ── Nike Swoosh ───────────────────────────────────────────────────────────────
 function NikeSwoosh({ size = 28 }) {
   return (
-    <svg width={size * 2.5} height={size} viewBox="0 0 120 48" fill="white">
-      <path d="M10 36 C30 10, 60 4, 110 18 C80 22, 50 28, 10 36Z" />
-    </svg>
+    <img
+      src="/nike-swoosh.jpg"
+      alt="Nike"
+      style={{ height: size, width: 'auto', display: 'block' }}
+    />
   )
 }
 
