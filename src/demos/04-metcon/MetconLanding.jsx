@@ -234,82 +234,88 @@ export default function MetconLanding() {
 // ── Text block con split lines + stats chips ──────────────────────────────────
 function TextBlock({ section, index }) {
   const lines = section.title.split('\n')
+  // Tiempo en que termina la última línea del título
+  const titleDone = lines.length * 0.1 + 0.15
 
   return (
     <div style={{
       position: 'absolute', bottom: '10%', left: 0, right: 0,
       textAlign: 'center', pointerEvents: 'none', padding: '0 24px',
     }}>
+
       {/* Título: cada línea entra por separado desde abajo */}
-      <div style={{ overflow: 'hidden', marginBottom: 14 }}>
-        <AnimatePresence mode="wait">
-          <motion.div key={index}>
-            {lines.map((line, i) => (
-              <motion.div
-                key={i}
-                initial={{ y: '110%', opacity: 0 }}
-                animate={{ y: '0%', opacity: 1 }}
-                exit={{ y: '-40%', opacity: 0 }}
-                transition={{
-                  duration: 0.6,
-                  delay: i * 0.08,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                style={{
-                  fontSize: 'clamp(36px, 6vw, 80px)',
-                  fontWeight: 900,
-                  color: section.color,
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.05,
-                  textTransform: 'uppercase',
-                  textShadow: '0 2px 24px rgba(0,0,0,0.5)',
-                  display: 'block',
-                }}
-              >
-                {line}
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`title-${index}`}
+          exit={{ opacity: 0, y: -20, transition: { duration: 0.2, ease: 'easeIn' } }}
+          style={{ marginBottom: 14 }}
+        >
+          {lines.map((line, i) => (
+            <motion.div
+              key={i}
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{
+                duration: 0.55,
+                delay: i * 0.1,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              style={{
+                fontSize: 'clamp(36px, 6vw, 80px)',
+                fontWeight: 900,
+                color: section.color,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.05,
+                textTransform: 'uppercase',
+                textShadow: '0 2px 24px rgba(0,0,0,0.5)',
+                display: 'block',
+              }}
+            >
+              {line}
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Subtítulo */}
-      <motion.p
-        key={`sub-${index}`}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 0.7, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5, delay: lines.length * 0.08 + 0.1, ease: [0.16, 1, 0.3, 1] }}
-        style={{
-          fontSize: 'clamp(14px, 1.8vw, 20px)',
-          color: section.color,
-          margin: '0 0 20px',
-          fontWeight: 400,
-          letterSpacing: '0.02em',
-        }}
-      >
-        {section.sub}
-      </motion.p>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={`sub-${index}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 0.7, y: 0 }}
+          exit={{ opacity: 0, y: -10, transition: { duration: 0.15 } }}
+          transition={{ duration: 0.45, delay: titleDone, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            fontSize: 'clamp(14px, 1.8vw, 20px)',
+            color: section.color,
+            margin: '0 0 20px',
+            fontWeight: 400,
+            letterSpacing: '0.02em',
+          }}
+        >
+          {section.sub}
+        </motion.p>
+      </AnimatePresence>
 
-      {/* Stats chips */}
-      <AnimatePresence>
+      {/* Stats chips — entran justo después del subtítulo */}
+      <AnimatePresence mode="wait">
         {section.stats && (
           <motion.div
             key={`stats-${index}`}
             style={{
               display: 'flex', gap: 10, justifyContent: 'center',
-              flexWrap: 'wrap', marginBottom: section.cta ? 28 : 0,
+              flexWrap: 'wrap', marginBottom: 0,
             }}
           >
             {section.stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 16, scale: 0.9 }}
+                initial={{ opacity: 0, y: 14, scale: 0.92 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.9 }}
+                exit={{ opacity: 0, y: -6, scale: 0.92, transition: { duration: 0.15 } }}
                 transition={{
                   duration: 0.4,
-                  delay: lines.length * 0.08 + 0.2 + i * 0.07,
+                  delay: titleDone + 0.1 + i * 0.07,
                   ease: [0.16, 1, 0.3, 1],
                 }}
                 style={{
@@ -346,7 +352,7 @@ function TextBlock({ section, index }) {
           key={`cta-${index}`}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, delay: titleDone + 0.1, ease: [0.16, 1, 0.3, 1] }}
           style={{ display: 'flex', gap: 12, justifyContent: 'center', pointerEvents: 'all' }}
         >
           <button style={{
