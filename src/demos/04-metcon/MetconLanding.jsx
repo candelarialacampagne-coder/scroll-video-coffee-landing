@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useScroll, useMotionValueEvent, useTransform, motion } from 'framer-motion'
+import { useScroll, useMotionValueEvent, useTransform, motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
 const TOTAL_FRAMES = 121
@@ -11,30 +11,47 @@ const SECTIONS = [
     title: 'Metcon 10',
     sub: 'Entrenás sin límites.',
     color: '#fff',
+    stats: null,
   },
   {
     at: 0.2,
     title: 'Estabilidad\nen cada rep.',
     sub: 'Suela plana diseñada para levantamiento.',
     color: '#fff',
+    stats: [
+      { label: 'Drop', value: '4mm' },
+      { label: 'Suela', value: '6mm' },
+      { label: 'Horma', value: 'Wide' },
+    ],
   },
   {
     at: 0.45,
     title: 'Agarre total.',
     sub: 'Tracción multidireccional para cualquier superficie.',
     color: '#fff',
+    stats: [
+      { label: 'Grip', value: '360°' },
+      { label: 'Superficie', value: 'Multi' },
+      { label: 'Flex', value: 'Alta' },
+    ],
   },
   {
     at: 0.7,
     title: 'Hecho para durar.',
     sub: 'Materiales de alta resistencia. Sin excusas.',
     color: '#fff',
+    stats: [
+      { label: 'Peso', value: '280g' },
+      { label: 'Upper', value: 'Mesh' },
+      { label: 'Refuerzo', value: 'TPU' },
+    ],
   },
   {
     at: 0.88,
     title: 'Tu mejor marca\nempieza acá.',
     sub: 'Disponible en múltiples colores.',
     color: '#fff',
+    stats: null,
     cta: true,
   },
 ]
@@ -124,7 +141,7 @@ export default function MetconLanding() {
           {/* Gradient overlay */}
           <div style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 30%, transparent 55%, rgba(0,0,0,0.8) 100%)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 30%, transparent 45%, rgba(0,0,0,0.85) 100%)',
           }} />
 
           {/* Back button */}
@@ -144,7 +161,7 @@ export default function MetconLanding() {
             ← Demo Lab
           </button>
 
-          {/* Nike wordmark */}
+          {/* Nike logo */}
           <div style={{
             position: 'absolute', top: 20, left: 0, right: 0,
             display: 'flex', justifyContent: 'center',
@@ -214,75 +231,152 @@ export default function MetconLanding() {
   )
 }
 
-// ── Text block ────────────────────────────────────────────────────────────────
+// ── Text block con split lines + stats chips ──────────────────────────────────
 function TextBlock({ section, index }) {
+  const lines = section.title.split('\n')
+
   return (
     <div style={{
-      position: 'absolute', bottom: '12%', left: 0, right: 0,
+      position: 'absolute', bottom: '10%', left: 0, right: 0,
       textAlign: 'center', pointerEvents: 'none', padding: '0 24px',
     }}>
-      <motion.div
-        key={index}
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -16 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <h2 style={{
-          fontSize: 'clamp(36px, 6vw, 80px)',
-          fontWeight: 900,
-          color: section.color,
-          letterSpacing: '-0.02em',
-          lineHeight: 1.0,
-          margin: '0 0 16px',
-          whiteSpace: 'pre-line',
-          textTransform: 'uppercase',
-          textShadow: '0 2px 24px rgba(0,0,0,0.5)',
-        }}>
-          {section.title}
-        </h2>
-        <p style={{
+      {/* Título: cada línea entra por separado desde abajo */}
+      <div style={{ overflow: 'hidden', marginBottom: 14 }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={index}>
+            {lines.map((line, i) => (
+              <motion.div
+                key={i}
+                initial={{ y: '110%', opacity: 0 }}
+                animate={{ y: '0%', opacity: 1 }}
+                exit={{ y: '-40%', opacity: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: i * 0.08,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                style={{
+                  fontSize: 'clamp(36px, 6vw, 80px)',
+                  fontWeight: 900,
+                  color: section.color,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.05,
+                  textTransform: 'uppercase',
+                  textShadow: '0 2px 24px rgba(0,0,0,0.5)',
+                  display: 'block',
+                }}
+              >
+                {line}
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Subtítulo */}
+      <motion.p
+        key={`sub-${index}`}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 0.7, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5, delay: lines.length * 0.08 + 0.1, ease: [0.16, 1, 0.3, 1] }}
+        style={{
           fontSize: 'clamp(14px, 1.8vw, 20px)',
           color: section.color,
-          opacity: 0.7,
-          margin: section.cta ? '0 0 32px' : 0,
+          margin: '0 0 20px',
           fontWeight: 400,
           letterSpacing: '0.02em',
-        }}>
-          {section.sub}
-        </p>
+        }}
+      >
+        {section.sub}
+      </motion.p>
 
-        {section.cta && (
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', pointerEvents: 'all' }}>
-            <button style={{
-              background: '#fff', color: '#111',
-              border: 'none', borderRadius: 999,
-              padding: '14px 36px', fontSize: 14,
-              fontWeight: 700, letterSpacing: '0.05em',
-              textTransform: 'uppercase', cursor: 'pointer',
-              transition: 'background 0.2s, transform 0.15s',
+      {/* Stats chips */}
+      <AnimatePresence>
+        {section.stats && (
+          <motion.div
+            key={`stats-${index}`}
+            style={{
+              display: 'flex', gap: 10, justifyContent: 'center',
+              flexWrap: 'wrap', marginBottom: section.cta ? 28 : 0,
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#e5e5e5'; e.currentTarget.style.transform = 'scale(1.03)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'scale(1)' }}
-            >
-              Comprar
-            </button>
-            <button style={{
-              background: 'transparent', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.5)',
-              borderRadius: 999, padding: '14px 36px',
-              fontSize: 14, fontWeight: 700,
-              letterSpacing: '0.05em', textTransform: 'uppercase',
-              cursor: 'pointer', transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.transform = 'scale(1.03)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'; e.currentTarget.style.transform = 'scale(1)' }}
-            >
-              Ver más
-            </button>
-          </div>
+          >
+            {section.stats.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 16, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.9 }}
+                transition={{
+                  duration: 0.4,
+                  delay: lines.length * 0.08 + 0.2 + i * 0.07,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 12,
+                  padding: '10px 20px',
+                  minWidth: 72,
+                }}
+              >
+                <span style={{
+                  fontSize: 20, fontWeight: 900, color: '#fff',
+                  letterSpacing: '-0.02em', lineHeight: 1,
+                }}>
+                  {stat.value}
+                </span>
+                <span style={{
+                  fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.5)',
+                  letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4,
+                }}>
+                  {stat.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
+
+      {/* CTA buttons */}
+      {section.cta && (
+        <motion.div
+          key={`cta-${index}`}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          style={{ display: 'flex', gap: 12, justifyContent: 'center', pointerEvents: 'all' }}
+        >
+          <button style={{
+            background: '#fff', color: '#111',
+            border: 'none', borderRadius: 999,
+            padding: '14px 36px', fontSize: 14,
+            fontWeight: 700, letterSpacing: '0.05em',
+            textTransform: 'uppercase', cursor: 'pointer',
+            transition: 'background 0.2s, transform 0.15s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#e5e5e5'; e.currentTarget.style.transform = 'scale(1.03)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            Comprar
+          </button>
+          <button style={{
+            background: 'transparent', color: '#fff',
+            border: '1px solid rgba(255,255,255,0.5)',
+            borderRadius: 999, padding: '14px 36px',
+            fontSize: 14, fontWeight: 700,
+            letterSpacing: '0.05em', textTransform: 'uppercase',
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.transform = 'scale(1.03)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'; e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            Ver más
+          </button>
+        </motion.div>
+      )}
     </div>
   )
 }
