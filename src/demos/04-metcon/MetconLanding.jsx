@@ -411,18 +411,11 @@ function ScrollHint({ scrollYProgress }) {
 // ── Nike Swoosh ───────────────────────────────────────────────────────────────
 function NikeSwoosh({ size = 52 }) {
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 12,
-      padding: '10px 20px',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <svg height={size} viewBox="0 0 400 155" fill="black" xmlns="http://www.w3.org/2000/svg">
-        <path d="M399.5 7.5c0 0-241.6 85-303.4 113.2c-17.9 8.2-34.4 11.1-47.8 9.2C28.3 126 10.7 106.7 16 84.3c3.9-16.7 19.1-29.6 39.8-31.7L0 147.5c0 0 17.5 7.1 47.3 5.5c32.7-1.7 65.5-13.9 96.9-28.7L399.5 7.5z"/>
-      </svg>
-    </div>
+    <img
+      src="/nike-logo.png"
+      alt="Nike"
+      style={{ height: size, width: 'auto', display: 'block', borderRadius: 8 }}
+    />
   )
 }
 
