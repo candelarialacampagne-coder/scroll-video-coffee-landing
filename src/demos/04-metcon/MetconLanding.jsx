@@ -312,7 +312,7 @@ function ScrollHint({ scrollYProgress }) {
 function NikeSwoosh({ size = 28 }) {
   return (
     <img
-      src="/nike-swoosh.jpg"
+      src="/nike-swoosh.png"
       alt="Nike"
       style={{ height: size, width: 'auto', display: 'block' }}
     />
